@@ -1,12 +1,16 @@
 server:
   http_listen_port: 3200
+  http_listen_address: 0.0.0.0
+  grpc_listen_address: 0.0.0.0
 
 distributor:
   receivers:
     otlp:
       protocols:
         grpc:
+          endpoint: 0.0.0.0:4317
         http:
+          endpoint: 0.0.0.0:4318
 
 ingester:
   trace_idle_period: 10s
@@ -17,12 +21,20 @@ compactor:
     block_retention: 24h
 
 metrics_generator:
-  registry:
-    external_labels:
-      source: tempo
-  processors:
-    - service-graphs
-    - span-metrics
+  storage:
+    path: /tmp/tempo-metrics
+
+  processor:
+    service_graphs:
+      dimensions:
+        - service.name
+
+    span_metrics:
+      dimensions:
+        - service.name
+        - span.name
+        - span.kind
+        - status.code
 
 storage:
   trace:
