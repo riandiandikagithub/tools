@@ -1,0 +1,52 @@
+# PostgreSQL Configuration
+postgresql:
+  # Multi-database support
+  databases:
+    - name: "default"
+      host: "localhost"
+      port: 5432
+      database: "postgres"
+      username: "postgres"
+      password: "postgres"
+      ssl_mode: "disable"  # disable, allow, prefer, require, verify-ca, verify-full
+
+      # Connection pool settings
+      pool:
+        min_connections: 5
+        max_connections: 20
+        max_idle_time: 300  # seconds
+        connection_timeout: 10  # seconds
+
+      # Monitoring settings
+      monitoring:
+        enabled: true
+        interval: 30  # seconds
+        track_activity: true
+        log_slow_queries: true
+        slow_query_threshold: 1000  # milliseconds
+
+  # Global monitoring settings
+  monitoring:
+    metrics:
+      - connection_count
+      - active_queries
+      - database_size
+      - cache_hit_ratio
+      - transaction_rate
+      - replication_lag
+      - slow_queries
+      - deadlocks
+
+    # Health check settings
+    health_check:
+      enabled: true
+      interval: 10  # seconds
+      timeout: 5  # seconds
+
+    # Alert thresholds
+    alerts:
+      max_connections_percent: 80
+      slow_query_threshold: 1000  # milliseconds
+      replication_lag_seconds: 10
+      cache_hit_ratio_min: 90  # percentage
+      disk_usage_percent: 85

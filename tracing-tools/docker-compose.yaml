@@ -1,0 +1,70 @@
+version: "3.9"
+
+services:
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
+      - ./grafana/dashboards:/etc/grafana/provisioning/dashboards
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    depends_on:
+      - prometheus
+      - loki
+      - tempo
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+  loki:
+    image: grafana/loki:latest
+    container_name: loki
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/loki.yml
+    volumes:
+      - ./loki/loki.yml:/etc/loki/loki.yml
+
+  tempo:
+    image: grafana/tempo:latest
+    container_name: tempo
+    command: ["-config.file=/etc/tempo/tempo.yaml"]
+    ports:
+      - "3200:3200"
+      - "4317:4317"
+      - "4318:4318"
+    volumes:
+      - ./tempo/tempo.yaml:/etc/tempo/tempo.yaml
+
+  collector:
+    image: otel/opentelemetry-collector-contrib
+    container_name: otel-collector
+    command:
+      - "--config=/etc/otel/otel-collector.yaml"
+    volumes:
+      - ./otel-collector.yaml:/etc/otel/otel-collector.yaml:ro
+    ports:
+      - "4319:4317"
+      - "4320:4318"
+      - "8889:8889"
+    depends_on:
+      - tempo
+      - loki
+
+  vector:
+    image: timberio/vector:0.51.0-alpine
+    container_name: vector
+    volumes:
+      - ./vector/vector.yaml:/etc/vector/vector.yaml
+      - ./logs:/var/log/app
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - loki

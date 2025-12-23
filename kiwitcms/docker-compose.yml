@@ -1,0 +1,35 @@
+version: "3.9"
+
+services:
+  kiwi:
+    platform: linux/amd64
+    image: pub.kiwitcms.eu/kiwitcms/kiwi:latest
+    container_name: kiwi_tcms
+    restart: unless-stopped
+    environment:
+      KIWI_DB_HOST: ${DB_HOST}
+      KIWI_DB_PORT: ${DB_PORT}
+      KIWI_DB_NAME: ${DB_NAME}
+      KIWI_DB_USER: ${DB_USER}
+      KIWI_DB_PASSWORD: ${DB_PASSWORD}
+      KIWI_REDIS_HOST: ${REDIS_HOST}
+      KIWI_REDIS_PORT: ${REDIS_PORT}
+
+    volumes:
+      - kiwisock:/tmp # <-- socket default Kiwi ada di sini
+
+  nginx:
+    platform: linux/amd64
+    image: nginx:alpine
+    container_name: kiwi_nginx
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+    volumes:
+      - kiwisock:/tmp
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - kiwi
+
+volumes:
+  kiwisock:

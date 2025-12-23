@@ -1,0 +1,22 @@
+# Kafka Configuration
+kafka:
+  brokers:
+    - "localhost:9093"
+    - "localhost:9094"
+    - "localhost:9095"
+
+  security:
+    protocol: "PLAINTEXT"  # PLAINTEXT, SSL, SASL_PLAINTEXT, SASL_SSL
+    sasl_mechanism: "PLAIN"  # PLAIN, SCRAM-SHA-256, SCRAM-SHA-512
+    username: ""
+    password: ""
+
+  monitoring:
+    interval: 30  # seconds
+    topics: []  # Empty means monitor all topics
+    consumer_groups: []  # Empty means monitor all consumer groups
+    metrics:
+      - broker_status
+      - topic_partitions
+      - consumer_lag
+      - message_rate

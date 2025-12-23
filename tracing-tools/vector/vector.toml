@@ -1,0 +1,39 @@
+# vector.toml
+
+########################################
+# Sources: baca log dari semua container Docker
+########################################
+[sources.docker_logs]
+type = "docker_logs"
+auto_partial_merge = true
+docker_host = "http://localhost:2375"
+exclude_containers = [ "exclude_" ]
+include_containers = [ "include_" ]
+include_images = [ "httpd" ]
+include_labels = [ "org.opencontainers.image.vendor=Vector" ]
+partial_event_marker_field = "_partial"
+retry_backoff_secs = 2
+
+
+########################################
+# Transforms: parse JSON log Docker
+########################################
+[transforms.parse_json]
+type = "remap"
+inputs = ["docker_logs"]
+source = '''
+# Docker default log JSON memiliki field "log"
+. = parse_json!(.message)
+'''
+
+########################################
+# Sinks: kirim ke Loki
+########################################
+[sinks.loki]
+type = "loki"
+inputs = ["parse_json"]
+endpoint = "http://localhost:3100/loki/api/v1/push"
+[sinks.loki.labels]
+container = "{{ container_name }}"
+source = "vector"
+encoding.codec = "json"

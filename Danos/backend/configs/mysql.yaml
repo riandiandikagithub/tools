@@ -1,0 +1,55 @@
+# MySQL Configuration
+mysql:
+  # Multi-database support
+  databases:
+    - name: "default"
+      host: "localhost"
+      port: 3306
+      database: "mysql"
+      username: "root"
+      password: "root"
+      charset: "utf8mb4"
+
+      # Connection pool settings
+      pool:
+        min_connections: 5
+        max_connections: 20
+        max_idle_time: 300  # seconds
+        connection_timeout: 10  # seconds
+
+      # Monitoring settings
+      monitoring:
+        enabled: true
+        interval: 30  # seconds
+        track_activity: true
+        log_slow_queries: true
+        slow_query_threshold: 1000  # milliseconds
+
+  # Global monitoring settings
+  monitoring:
+    metrics:
+      - connection_count
+      - query_cache_hit_ratio
+      - slow_queries
+      - table_locks
+      - innodb_buffer_pool
+      - threads_running
+      - bytes_sent_received
+      - aborted_connections
+      - table_size
+      - replication_status
+
+    # Health check settings
+    health_check:
+      enabled: true
+      interval: 10  # seconds
+      timeout: 5  # seconds
+
+    # Alert thresholds
+    alerts:
+      max_connections_percent: 80
+      slow_query_threshold: 1000  # milliseconds
+      query_cache_hit_ratio_min: 85  # percentage
+      replication_lag_seconds: 10
+      disk_usage_percent: 85
+      threads_running_max: 100

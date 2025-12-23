@@ -1,0 +1,34 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+      http:
+
+processors:
+  batch:
+
+connectors:
+  servicegraph:
+    dimensions:
+      - service.name
+    latency_histogram_buckets: [100ms, 250ms, 500ms, 1s, 2s]
+
+exporters:
+  otlp/tempo:
+    endpoint: tempo:4317
+    tls:
+      insecure: true
+
+  prometheus:
+    endpoint: "0.0.0.0:8889"
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [otlp/tempo, servicegraph]
+
+    metrics:
+      receivers: [servicegraph]
+      exporters: [prometheus]

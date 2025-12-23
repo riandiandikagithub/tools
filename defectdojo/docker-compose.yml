@@ -1,0 +1,42 @@
+version: "3.8"
+
+services:
+  nginx:
+    image: defectdojo/defectdojo-nginx:latest
+    ports:
+      - "8085:8080"
+    depends_on:
+      - uwsgi
+    environment:
+      DD_ALLOWED_HOSTS: "*"
+
+  uwsgi:
+    image: defectdojo/defectdojo-django:latest
+    depends_on:
+      - initializer
+    environment:
+      # GANTI sesuai PostgreSQL kamu
+      DD_DATABASE_URL: "postgres://dd_user:dd_password@host.docker.internal:5432/defectdojo"
+
+      DD_SECRET_KEY: "mC1Hc7+vQf4P3Y2Yk8Q0eH0pK8d8zFQ0F+Yx2w5XG6lN8yS1vZxJ2A=="
+      DD_CREDENTIAL_AES_256_KEY: "a4f1d3c5e7b9a0c2d4e6f81234567890abcdef1234567890fedcba9876543210"
+    volumes:
+      - defectdojo_media:/app/media
+
+  initializer:
+    image: defectdojo/defectdojo-django:latest
+    entrypoint: ["/entrypoint-initializer.sh"]
+    environment:
+      # GANTI sesuai PostgreSQL kamu
+      DD_DATABASE_URL: "postgres://dd_user:dd_password@host.docker.internal:5432/defectdojo"
+      DD_INITIALIZE: "true"
+      DD_ADMIN_USER: "admin"
+      DD_ADMIN_MAIL: "muhammadriandi.andika@gmail.com"
+      DD_ADMIN_FIRST_NAME: "Admin"
+      DD_ADMIN_LAST_NAME: "User"
+      DD_ADMIN_PASSWORD: "admin"
+      DD_SECRET_KEY: "mC1Hc7+vQf4P3Y2Yk8Q0eH0pK8d8zFQ0F+Yx2w5XG6lN8yS1vZxJ2A=="
+      DD_CREDENTIAL_AES_256_KEY: "a4f1d3c5e7b9a0c2d4e6f81234567890abcdef1234567890fedcba9876543210"
+
+volumes:
+  defectdojo_media:

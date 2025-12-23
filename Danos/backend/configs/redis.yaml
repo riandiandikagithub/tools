@@ -1,0 +1,29 @@
+# Redis Configuration
+redis:
+  # Single mode configuration
+  single:
+    host: "0.0.0.0"
+    port: 6379
+    password: ""
+    database: 0
+
+  # Cluster mode configuration (uncomment to use)
+  nodes:
+    - host: "0.0.0.0"
+      port: 7000
+      password: ""
+    - host: "0.0.0.0"
+      port: 7001
+      password: ""
+    - host: "0.0.0.0"
+      port: 7002
+      password: ""
+
+  monitoring:
+    interval: 30 # seconds
+    metrics:
+      - memory_usage
+      - cpu_usage
+      - connected_clients
+      - commands_per_sec
+      - hit_rate

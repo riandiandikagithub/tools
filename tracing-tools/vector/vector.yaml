@@ -1,0 +1,43 @@
+########################################
+# Sources: Docker logs (auto load)
+########################################
+sources:
+  docker_logs:
+    type: docker_logs
+    auto_partial_merge: true
+    retry_backoff_secs: 2
+
+########################################
+# Transforms: normalize log
+########################################
+transforms:
+  normalize:
+    type: remap
+    inputs: [docker_logs]
+    source: |
+      .raw_message = .message
+
+      if is_string(.message) {
+        parsed, err = parse_json(.message)
+        if err == null && is_object(parsed) {
+          .json = parsed
+        }
+      }
+
+      if !exists(.container_name) {
+        .container_name = "unknown"
+      }
+
+########################################
+# Sinks: Loki (LABELS = MAP ✅)
+########################################
+sinks:
+  loki:
+    type: loki
+    inputs: [normalize]
+    endpoint: http://loki:3100
+    encoding:
+      codec: "json" # ...JSON
+    labels:
+      container: "{{ container_name }}"
+      source: vector
