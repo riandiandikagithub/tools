@@ -1,0 +1,3 @@
+install telegraf on mac
+
+brew update && brew install telegraf

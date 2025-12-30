@@ -45,12 +45,15 @@ services:
       - ./tempo/tempo.yaml:/etc/tempo/tempo.yaml
 
   collector:
-    image: otel/opentelemetry-collector-contrib
+    image: otel/opentelemetry-collector-contrib:latest
     container_name: otel-collector
     command:
       - "--config=/etc/otel/otel-collector.yaml"
     volumes:
       - ./otel-collector.yaml:/etc/otel/otel-collector.yaml:ro
+      - /var/log:/var/log
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+
     ports:
       - "4319:4317"
       - "4320:4318"
@@ -58,6 +61,20 @@ services:
     depends_on:
       - tempo
       - loki
+
+  # telegraf:
+  #   image: telegraf:latest
+  #   container_name: telegraf
+  #   user: root
+  #   depends_on:
+  #     - loki
+  #   environment:
+  #     - HOST_PROC=/rootfs/proc
+  #     - HOST_SYS=/rootfs/sys
+  #     - HOST_ETC=/rootfs/etc
+  #   volumes:
+  #     - /var/run/docker.sock:/var/run/docker.sock:ro
+  #     - ./telegraf/telegraf.conf:/etc/telegraf/telegraf.conf:ro
 
   vector:
     image: timberio/vector:0.51.0-alpine

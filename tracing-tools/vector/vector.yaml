@@ -1,43 +1,56 @@
-########################################
-# Sources: Docker logs (auto load)
-########################################
 sources:
   docker_logs:
     type: docker_logs
-    auto_partial_merge: true
-    retry_backoff_secs: 2
+    docker_host: unix:///var/run/docker.sock
+    exclude_containers:
+      - grafana
+      - loki
+      - prometheus
+      - tempo
 
-########################################
-# Transforms: normalize log
-########################################
 transforms:
-  normalize:
+  parse_and_enrich:
     type: remap
     inputs: [docker_logs]
     source: |
-      .raw_message = .message
-
       if is_string(.message) {
         parsed, err = parse_json(.message)
-        if err == null && is_object(parsed) {
-          .json = parsed
+        if err == null {
+          . = merge!(., parsed)
         }
       }
 
-      if !exists(.container_name) {
-        .container_name = "unknown"
+      if !exists(.service) {
+        .service = "bp-master-data-svc"
       }
 
-########################################
-# Sinks: Loki (LABELS = MAP ✅)
-########################################
+      if exists(.level) {
+        .level = downcase!(.level)
+      } else {
+        .level = "info"
+      }
+
+      # 🔑 FIX UTAMA
+      if exists(.trace_id) {
+        .trace_id = to_string!(.trace_id)
+      } else if exists(.TRACE_ID) {
+        .trace_id = to_string!(.TRACE_ID)
+      } else {
+        .trace_id = "no-trace"
+      }
+
 sinks:
   loki:
     type: loki
-    inputs: [normalize]
+    inputs: [parse_and_enrich]
     endpoint: http://loki:3100
+
     encoding:
-      codec: "json" # ...JSON
+      codec: json
+
     labels:
+      service: "{{ service }}"
+      level: "{{ level }}"
+      trace_id: "{{ trace_id }}"
       container: "{{ container_name }}"
-      source: vector
+      stream: "{{ stream }}"
